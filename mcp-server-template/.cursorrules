@@ -1,0 +1,46 @@
+# MCP Server Configuration for Cursor
+
+This directory contains an MCP server for intelligent Performance Profile creation.
+
+To use this MCP server in Cursor:
+
+1. Build the container:
+   ```bash
+   cd mcp-server-template
+   podman build -t performance-profile-creator-mcp:latest .
+   ```
+
+2. Add to your Cursor MCP settings (Cursor Settings > Features > MCP Servers):
+   ```json
+   {
+     "mcpServers": {
+       "performance-profile-creator": {
+         "command": "podman",
+         "args": [
+           "run",
+           "-i",
+           "--rm",
+           "-v", "/path/to/must-gather:/must-gather:z",
+           "-e", "MCP_TRANSPORT",
+           "performance-profile-creator-mcp:latest"
+         ],
+         "env": {
+           "MCP_TRANSPORT": "stdio"
+         }
+       }
+     }
+   }
+   ```
+
+3. Update the `/path/to/must-gather` with your actual must-gather directory path
+
+4. Use natural language to interact with the MCP server:
+   - "Analyze my cluster hardware"
+   - "I need a performance profile for 5G RAN workloads"
+   - "What workload templates are available?"
+   - "Validate if my hardware can handle real-time kernel with 8 reserved CPUs"
+
+
+
+
+

@@ -3,6 +3,8 @@ _output
 _obj
 _test
 tmp
+must-gather
+__pycache__
 
 # Files
 /*.sh

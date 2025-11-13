@@ -1,0 +1,22 @@
+FROM fedora:40
+
+WORKDIR /app
+
+# Install Python dependencies
+COPY requirements.txt ./
+RUN dnf install -y python3 podman python3-pip && \
+    dnf clean all
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application files
+COPY mcp_server.py ./
+COPY must_gather_parser.py ./
+COPY hardware_validator.py ./
+COPY ppc_generator.py ./
+COPY workload_templates.py ./
+
+# Note: This simplified version doesn't include podman
+# The create_performance_profile tool won't execute PPC commands
+# But all analysis, validation, and command generation tools work perfectly
+
+CMD ["python3", "mcp_server.py"]

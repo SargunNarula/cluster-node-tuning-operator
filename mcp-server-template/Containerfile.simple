@@ -1,0 +1,23 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install Python dependencies
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application files
+COPY mcp_server.py ./
+COPY must_gather_parser.py ./
+COPY hardware_validator.py ./
+COPY ppc_generator.py ./
+COPY workload_templates.py ./
+
+# Note: Without podman, create_performance_profile tool won't work
+# But all other tools (analysis, validation, command generation) work fine
+
+CMD ["python", "mcp_server.py"]
+
+
+
+

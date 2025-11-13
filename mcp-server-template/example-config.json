@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "performance-profile-creator": {
+      "command": "podman",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-v", "/absolute/path/to/must-gather:/must-gather:z",
+        "-e", "MCP_TRANSPORT",
+        "localhost/performance-profile-creator-mcp:latest"
+      ],
+      "env": {
+        "MCP_TRANSPORT": "stdio"
+      }
+    }
+  }
+}
+
+
+
+
+

@@ -21,6 +21,7 @@ import (
 	ntomf "github.com/openshift/cluster-node-tuning-operator/pkg/manifests"
 	"github.com/openshift/cluster-node-tuning-operator/pkg/metrics"
 	"github.com/openshift/cluster-node-tuning-operator/pkg/tuned"
+	"github.com/openshift/cluster-node-tuning-operator/version"
 )
 
 const (
@@ -161,6 +162,20 @@ func (c *Controller) numProfilesWithBootcmdlineConflict(profileList []*tunedv1.P
 	}
 
 	return numConflict
+}
+
+// numMCLabelsAcrossMCP returns the total number
+// of Profiles in the internal operator's cache (mcLabelsAcrossMCP)
+// tracked as using machineConfigLabels that match across multiple MCPs.
+func (c *Controller) numMCLabelsAcrossMCP(profileList []*tunedv1.Profile) int {
+	n := 0
+	for _, profile := range profileList {
+		if c.mcLabelsAcrossMCP[profile.Name] {
+			n++
+		}
+	}
+
+	return n
 }
 
 // computeStatus computes the operator's current status.
@@ -318,6 +333,14 @@ func (c *Controller) computeStatus(tuned *tunedv1.Tuned, conditions []configv1.C
 			degradedCondition.Message = fmt.Sprintf("%v/%v Profiles with bootcmdline conflict", numConflict, len(profileList))
 		}
 
+		numMCLabelsAcrossMCP := c.numMCLabelsAcrossMCP(profileList)
+		if numMCLabelsAcrossMCP > 0 {
+			klog.Infof("%v/%v Profiles use machineConfigLabels that match across multiple MCPs", numMCLabelsAcrossMCP, len(profileList))
+			degradedCondition.Status = configv1.ConditionTrue
+			degradedCondition.Reason = "MCLabelsAcrossMCPs"
+			degradedCondition.Message = fmt.Sprintf("%v/%v Profiles use machineConfigLabels that match across multiple MCPs", numMCLabelsAcrossMCP, len(profileList))
+		}
+
 		// If the operator is not available for an extensive period of time, set the Degraded operator status.
 		conditions = clusteroperator.SetStatusCondition(conditions, &availableCondition)
 		now := metav1.Now().Unix()
@@ -365,6 +388,9 @@ func getRelatedObjects() []configv1.ObjectReference {
 		// The `resource` property of `relatedObjects` stanza should be the lowercase, plural value like `daemonsets`.
 		// See BZ1851214
 		{Group: "", Resource: "namespaces", Name: tunedMf.Namespace},
+		{Group: "", Resource: "serviceaccounts", Name: version.OperatorFilename, Namespace: tunedMf.Namespace},
+		{Group: "rbac.authorization.k8s.io", Resource: "clusterroles", Name: version.OperatorFilename},
+		{Group: "rbac.authorization.k8s.io", Resource: "clusterrolebindings", Name: version.OperatorFilename},
 		{Group: "tuned.openshift.io", Resource: "profiles", Name: "", Namespace: tunedMf.Namespace},
 		{Group: "tuned.openshift.io", Resource: "tuneds", Name: "", Namespace: tunedMf.Namespace},
 		{Group: "apps", Resource: "daemonsets", Name: dsMf.Name, Namespace: dsMf.Namespace},
